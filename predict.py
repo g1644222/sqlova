@@ -65,6 +65,7 @@ if not args.split:
     app = Flask(__name__)
     @app.route('/', methods=['POST'])
     def run():
+        print('1:' + request)
         if handle_request:
             return handle_request(request)
         else:

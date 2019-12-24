@@ -128,6 +128,7 @@ def annotate_example_ws(example, table):
         ann['wvi_corenlp'] = None
         ann['tok_error'] = 'SQuAD style st, ed are not found under CoreNLP.'
 
+    print('2:'+ ann)
     return ann
 
 
