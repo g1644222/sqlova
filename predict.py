@@ -209,6 +209,7 @@ def handle_request0(request):
         add_csv.csv_stream_to_sqlite(table_id, stream, base + '.db')
         stream.seek(0)
         record = add_csv.csv_stream_to_json(table_id, stream, base + '.tables.jsonl')
+        return jsonify(record), code
         stream.seek(0)
         add_question.question_to_json(table_id, q, base + '.jsonl')
         annotation = annotate_ws.annotate_example_ws(add_question.encode_question(table_id, q),
@@ -218,7 +219,6 @@ def handle_request0(request):
 
         message = run_split(base)
         code = 200
-        return message, code
 
         if not debug:
             os.remove(base + '.db')
