@@ -62,10 +62,10 @@ thread = None
 status = "Loading sqlova model, please wait"
 
 if not args.split:
+
     app = Flask(__name__)
     @app.route('/', methods=['POST'])
     def run():
-        print('1:' + request)
         if handle_request:
             return handle_request(request)
         else:
@@ -177,7 +177,6 @@ def run_split(split):
         "split": split,
         "result": results
     }
-    print('1: ->' + message)
     return message
 
 def serialize(o):
@@ -185,9 +184,9 @@ def serialize(o):
         return int(o)
 
 if args.split:
+    print(hoge)
     message = run_split(args.split)
     json.dumps(message, indent=2, default=serialize)
-    print(print('2: ->' + message))
     exit(0)
 
 
@@ -241,8 +240,7 @@ def handle_request0(request):
 
     if debug:
         message['base'] = base
-
-    print(print('3: ->' + message))
+        message['check'] = 'kakuninn'
 
     return jsonify(message), code
 
