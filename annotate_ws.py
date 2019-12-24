@@ -21,6 +21,7 @@ def annotate(sentence, lower=True):
         client = CoreNLPClient(default_annotators='ssplit,tokenize'.split(','))
     words, gloss, after = [], [], []
     for s in client.annotate(sentence):
+        print(s)
         for t in s:
             words.append(t.word)
             gloss.append(t.originalText)
@@ -128,7 +129,7 @@ def annotate_example_ws(example, table):
         ann['wvi_corenlp'] = None
         ann['tok_error'] = 'SQuAD style st, ed are not found under CoreNLP.'
 
-    print('2:'+ ann)
+    # print('2:'+ ann)
     return ann
 
 
