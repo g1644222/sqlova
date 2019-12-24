@@ -200,7 +200,6 @@ try:
     q = request.form['q']
     table_id = os.path.splitext(csv.filename)[0]
     table_id = re.sub(r'\W+', '_', table_id)
-    print('1 ->' + table_id)
 
     # it would be easy to do all this in memory but I'm lazy
     stream = io.StringIO(csv.stream.read().decode("UTF8"), newline=None)
@@ -208,7 +207,6 @@ try:
     add_csv.csv_stream_to_sqlite(table_id, stream, base + '.db')
     stream.seek(0)
     record = add_csv.csv_stream_to_json(table_id, stream, base + '.tables.jsonl')
-    print(record)
     stream.seek(0)
     add_question.question_to_json(table_id, q, base + '.jsonl')
     annotation = annotate_ws.annotate_example_ws(add_question.encode_question(table_id, q),
@@ -217,7 +215,7 @@ try:
         fout.write(json.dumps(annotation) + '\n')
 
     message = run_split(base)
-    print(message)
+    return jsonify(message), code
     code = 200
 
     if not debug:
@@ -239,8 +237,8 @@ except Exception as e:
     message = { "error": str(e) }
     code = 500
 
-# if debug:
-#     message['base'] = base
+if debug:
+    message['base'] = base
 # def handle_request0(request):
 #     debug = 'debug' in request.form
     # base = ""
