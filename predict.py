@@ -191,8 +191,9 @@ if args.split:
 
 
 def handle_request0(request):
-    print(request.form)
+    # print(request.form)
     debug = 'debug' in request.form
+    yield jsonify(request.form), 200
     base = ""
     try:
         if not 'csv' in request.files:
@@ -219,6 +220,8 @@ def handle_request0(request):
 
         message = run_split(base)
         code = 200
+
+        yield jsonify(message), 200
 
         if not debug:
             os.remove(base + '.db')

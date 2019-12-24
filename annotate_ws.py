@@ -21,7 +21,7 @@ def annotate(sentence, lower=True):
         client = CoreNLPClient(default_annotators='ssplit,tokenize'.split(','))
     words, gloss, after = [], [], []
     for s in client.annotate(sentence):
-        print(s)
+        # print(s)
         for t in s:
             words.append(t.word)
             gloss.append(t.originalText)
