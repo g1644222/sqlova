@@ -218,7 +218,7 @@ def handle_request0(request):
 
         message = run_split(base)
         code = 200
-        return jsonify(message), code
+        return message, code
 
         if not debug:
             os.remove(base + '.db')
