@@ -62,10 +62,10 @@ thread = None
 status = "Loading sqlova model, please wait"
 
 if not args.split:
-    print("hogehoge")
     app = Flask(__name__)
     @app.route('/', methods=['POST'])
     def run():
+        print('1:' + request)
         if handle_request:
             return handle_request(request)
         else:
@@ -76,7 +76,7 @@ if not args.split:
     thread.daemon = True
     thread.start()
 
-    
+
 # This is a stripped down version of the test() method in train.py - identical, except:
 #   - does not attempt to measure accuracy and indeed does not expect the data to be labelled.
 #   - saves plain text sql queries.
