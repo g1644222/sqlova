@@ -191,6 +191,7 @@ if args.split:
 
 
 def handle_request0(request):
+    print(request.form)
     debug = 'debug' in request.form
     base = ""
     try:
@@ -240,7 +241,6 @@ def handle_request0(request):
 
     if debug:
         message['base'] = base
-        message['check'] = 'kakuninn'
 
     return jsonify(message), code
 
