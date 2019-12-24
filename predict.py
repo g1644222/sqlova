@@ -62,7 +62,6 @@ thread = None
 status = "Loading sqlova model, please wait"
 
 if not args.split:
-    print("hogehoge")
     app = Flask(__name__)
     @app.route('/', methods=['POST'])
     def run():
@@ -76,7 +75,7 @@ if not args.split:
     thread.daemon = True
     thread.start()
 
-    
+
 # This is a stripped down version of the test() method in train.py - identical, except:
 #   - does not attempt to measure accuracy and indeed does not expect the data to be labelled.
 #   - saves plain text sql queries.
@@ -177,6 +176,7 @@ def run_split(split):
         "split": split,
         "result": results
     }
+    print('1: ->' + message)
     return message
 
 def serialize(o):
@@ -184,9 +184,9 @@ def serialize(o):
         return int(o)
 
 if args.split:
-    print(hoge)
     message = run_split(args.split)
     json.dumps(message, indent=2, default=serialize)
+    print(print('2: ->' + message))
     exit(0)
 
 
@@ -240,6 +240,8 @@ def handle_request0(request):
 
     if debug:
         message['base'] = base
+
+    print(print('3: ->' + message))
 
     return jsonify(message), code
 
