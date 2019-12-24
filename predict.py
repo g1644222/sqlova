@@ -190,62 +190,109 @@ if args.split:
     exit(0)
 
 
-def handle_request0(request):
-    # print(request.form)
-    debug = 'debug' in request.form
-    yield jsonify(request.form), 200
-    base = ""
-    try:
-        if not 'csv' in request.files:
-            raise Exception('please include a csv file')
-        if not 'q' in request.form:
-            raise Exception('please include a q parameter with a question in it')
-        csv = request.files['csv']
-        q = request.form['q']
-        table_id = os.path.splitext(csv.filename)[0]
-        table_id = re.sub(r'\W+', '_', table_id)
+base = ""
+try:
+    if not 'csv' in request.files:
+        raise Exception('please include a csv file')
+    if not 'q' in request.form:
+        raise Exception('please include a q parameter with a question in it')
+    csv = request.files['csv']
+    q = request.form['q']
+    table_id = os.path.splitext(csv.filename)[0]
+    table_id = re.sub(r'\W+', '_', table_id)
+    print('1 ->' + table_id)
 
-        # it would be easy to do all this in memory but I'm lazy
-        stream = io.StringIO(csv.stream.read().decode("UTF8"), newline=None)
-        base = table_id + "_" + str(uuid.uuid4())
-        add_csv.csv_stream_to_sqlite(table_id, stream, base + '.db')
-        stream.seek(0)
-        record = add_csv.csv_stream_to_json(table_id, stream, base + '.tables.jsonl')
-        stream.seek(0)
-        add_question.question_to_json(table_id, q, base + '.jsonl')
-        annotation = annotate_ws.annotate_example_ws(add_question.encode_question(table_id, q),
-                                                     record)
-        with open(base + '_tok.jsonl', 'a+') as fout:
-            fout.write(json.dumps(annotation) + '\n')
+    # it would be easy to do all this in memory but I'm lazy
+    stream = io.StringIO(csv.stream.read().decode("UTF8"), newline=None)
+    base = table_id + "_" + str(uuid.uuid4())
+    add_csv.csv_stream_to_sqlite(table_id, stream, base + '.db')
+    stream.seek(0)
+    record = add_csv.csv_stream_to_json(table_id, stream, base + '.tables.jsonl')
+    print(record)
+    stream.seek(0)
+    add_question.question_to_json(table_id, q, base + '.jsonl')
+    annotation = annotate_ws.annotate_example_ws(add_question.encode_question(table_id, q),
+                                                 record)
+    with open(base + '_tok.jsonl', 'a+') as fout:
+        fout.write(json.dumps(annotation) + '\n')
 
-        message = run_split(base)
-        code = 200
+    message = run_split(base)
+    print(message)
+    code = 200
 
-        yield jsonify(message), 200
+    if not debug:
+        os.remove(base + '.db')
+        os.remove(base + '.jsonl')
+        os.remove(base + '.tables.jsonl')
+        os.remove(base + '_tok.jsonl')
+        os.remove('results_' + base + '.jsonl')
+        if 'result' in message:
+            message = message['result'][0]
+            del message['query']
+            del message['nlu']
+            del message['table_id']
+            message['params'] = message['sql_with_params'][1]
+            message['sql'] = message['sql_with_params'][0]
+            del message['sql_with_params']
 
-        if not debug:
-            os.remove(base + '.db')
-            os.remove(base + '.jsonl')
-            os.remove(base + '.tables.jsonl')
-            os.remove(base + '_tok.jsonl')
-            os.remove('results_' + base + '.jsonl')
-            if 'result' in message:
-                message = message['result'][0]
-                del message['query']
-                del message['nlu']
-                del message['table_id']
-                message['params'] = message['sql_with_params'][1]
-                message['sql'] = message['sql_with_params'][0]
-                del message['sql_with_params']
+except Exception as e:
+    message = { "error": str(e) }
+    code = 500
 
-    except Exception as e:
-        message = { "error": str(e) }
-        code = 500
+# if debug:
+#     message['base'] = base
+# def handle_request0(request):
+#     debug = 'debug' in request.form
+    # base = ""
+    # try:
+    #     if not 'csv' in request.files:
+    #         raise Exception('please include a csv file')
+    #     if not 'q' in request.form:
+    #         raise Exception('please include a q parameter with a question in it')
+    #     csv = request.files['csv']
+    #     q = request.form['q']
+    #     table_id = os.path.splitext(csv.filename)[0]
+    #     table_id = re.sub(r'\W+', '_', table_id)
+    #
+    #     # it would be easy to do all this in memory but I'm lazy
+    #     stream = io.StringIO(csv.stream.read().decode("UTF8"), newline=None)
+    #     base = table_id + "_" + str(uuid.uuid4())
+    #     add_csv.csv_stream_to_sqlite(table_id, stream, base + '.db')
+    #     stream.seek(0)
+    #     record = add_csv.csv_stream_to_json(table_id, stream, base + '.tables.jsonl')
+    #     stream.seek(0)
+    #     add_question.question_to_json(table_id, q, base + '.jsonl')
+    #     annotation = annotate_ws.annotate_example_ws(add_question.encode_question(table_id, q),
+    #                                                  record)
+    #     with open(base + '_tok.jsonl', 'a+') as fout:
+    #         fout.write(json.dumps(annotation) + '\n')
+    #
+    #     message = run_split(base)
+    #     code = 200
+    #
+    #     if not debug:
+    #         os.remove(base + '.db')
+    #         os.remove(base + '.jsonl')
+    #         os.remove(base + '.tables.jsonl')
+    #         os.remove(base + '_tok.jsonl')
+    #         os.remove('results_' + base + '.jsonl')
+    #         if 'result' in message:
+    #             message = message['result'][0]
+    #             del message['query']
+    #             del message['nlu']
+    #             del message['table_id']
+    #             message['params'] = message['sql_with_params'][1]
+    #             message['sql'] = message['sql_with_params'][0]
+    #             del message['sql_with_params']
+    #
+    # except Exception as e:
+    #     message = { "error": str(e) }
+    #     code = 500
+    #
+    # if debug:
+    #     message['base'] = base
 
-    if debug:
-        message['base'] = base
-
-    return jsonify(message), code
+    # return jsonify(message), code
 
 status = "Loading corenlp models, please wait"
 annotate_ws.annotate('start up please')
