@@ -158,47 +158,47 @@ def run_split(split):
 
 
     if 'between' in t1.get('question'):
-        engine.query('SELECT max(y) FROM test - SELECT min(y) FROM test')
+        out = engine.query('SELECT max(y) FROM test - SELECT min(y) FROM test')
 
 
-    if 'What' in t1.get('question'):
-        engine.query('Select y From \
+    elif 'What' in t1.get('question'):
+        out =engine.query('Select y From \
         (Select y ,\
         RANK() OVER(PARTITION BY y DESC) y_sort \
         From test\
         ) \
         Where 注文回数順 == {}') .format(t1.get('question').split()[3])
 
+    if out == None:
+        Load data
+        dev_data, dev_table = load_wikisql_data(args.data_path, mode=split, toy_model=args.toy_model, toy_size=args.toy_size, no_hs_tok=True)
+        dev_loader = torch.utils.data.DataLoader(
+            batch_size=args.bS,
+            dataset=dev_data,
+            shuffle=False,
+            num_workers=1,
+            collate_fn=lambda x: x  # now dictionary values are not merged!
+        )
 
+        # Run prediction
+        with torch.no_grad():
+            results = predict(dev_loader,
+                              dev_table,
+                              model,
+                              model_bert,
+                              bert_config,
+                              tokenizer,
+                              args.max_seq_length,
+                              args.num_target_layers,
+                              detail=False,
+                              path_db=args.data_path,
+                              st_pos=0,
+                              dset_name=split, EG=args.EG)
 
+        # Save results
+        save_for_evaluation(path_save_for_evaluation, results, split)
 
-    # Load data
-    # dev_data, dev_table = load_wikisql_data(args.data_path, mode=split, toy_model=args.toy_model, toy_size=args.toy_size, no_hs_tok=True)
-    # dev_loader = torch.utils.data.DataLoader(
-    #     batch_size=args.bS,
-    #     dataset=dev_data,
-    #     shuffle=False,
-    #     num_workers=1,
-    #     collate_fn=lambda x: x  # now dictionary values are not merged!
-    # )
-    #
-    # # Run prediction
-    # with torch.no_grad():
-    #     results = predict(dev_loader,
-    #                       dev_table,
-    #                       model,
-    #                       model_bert,
-    #                       bert_config,
-    #                       tokenizer,
-    #                       args.max_seq_length,
-    #                       args.num_target_layers,
-    #                       detail=False,
-    #                       path_db=args.data_path,
-    #                       st_pos=0,
-    #                       dset_name=split, EG=args.EG)
-    #
-    # # Save results
-    # save_for_evaluation(path_save_for_evaluation, results, split)
+    result  = [o.result for o in out]
     message = {
         "split": split,
         "result": results
