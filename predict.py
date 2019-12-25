@@ -30,6 +30,10 @@
 #
 # Results will be in a file called results_<split>.jsonl in the result_path.
 
+"""
+とりあえず折れ線グラフの質問に答えらえるようにrun_splitの部分を変更
+"""
+
 import argparse, os
 from sqlnet.dbengine import DBEngine
 from sqlova.utils.utils_wikisql import *
@@ -146,33 +150,55 @@ args.no_pretraining = True  # counterintuitive, but avoids loading unused models
 model, model_bert, tokenizer, bert_config = get_models(args, BERT_PT_PATH, trained=True, path_model_bert=path_model_bert, path_model=path_model)
 
 def run_split(split):
+    engine = DBEngine(os.path.join(path_db, f"{split}.db"))
+     with open(split + '_tok.jsonl') as f:
+        for idx, line in enumerate(f):
+            t1 = json.loads(line.strip())
+
+
+
+    if 'between' in t1.get('question'):
+        engine.query('SELECT max(y) FROM test - SELECT min(y) FROM test')
+
+
+    if 'What' in t1.get('question'):
+        engine.query('Select y From \
+        (Select y ,\
+        RANK() OVER(PARTITION BY y DESC) y_sort \
+        From test\
+        ) \
+        Where 注文回数順 == {}') .format(t1.get('question').split()[3])
+
+
+
+
     # Load data
-    dev_data, dev_table = load_wikisql_data(args.data_path, mode=split, toy_model=args.toy_model, toy_size=args.toy_size, no_hs_tok=True)
-    dev_loader = torch.utils.data.DataLoader(
-        batch_size=args.bS,
-        dataset=dev_data,
-        shuffle=False,
-        num_workers=1,
-        collate_fn=lambda x: x  # now dictionary values are not merged!
-    )
-
-    # Run prediction
-    with torch.no_grad():
-        results = predict(dev_loader,
-                          dev_table,
-                          model,
-                          model_bert,
-                          bert_config,
-                          tokenizer,
-                          args.max_seq_length,
-                          args.num_target_layers,
-                          detail=False,
-                          path_db=args.data_path,
-                          st_pos=0,
-                          dset_name=split, EG=args.EG)
-
-    # Save results
-    save_for_evaluation(path_save_for_evaluation, results, split)
+    # dev_data, dev_table = load_wikisql_data(args.data_path, mode=split, toy_model=args.toy_model, toy_size=args.toy_size, no_hs_tok=True)
+    # dev_loader = torch.utils.data.DataLoader(
+    #     batch_size=args.bS,
+    #     dataset=dev_data,
+    #     shuffle=False,
+    #     num_workers=1,
+    #     collate_fn=lambda x: x  # now dictionary values are not merged!
+    # )
+    #
+    # # Run prediction
+    # with torch.no_grad():
+    #     results = predict(dev_loader,
+    #                       dev_table,
+    #                       model,
+    #                       model_bert,
+    #                       bert_config,
+    #                       tokenizer,
+    #                       args.max_seq_length,
+    #                       args.num_target_layers,
+    #                       detail=False,
+    #                       path_db=args.data_path,
+    #                       st_pos=0,
+    #                       dset_name=split, EG=args.EG)
+    #
+    # # Save results
+    # save_for_evaluation(path_save_for_evaluation, results, split)
     message = {
         "split": split,
         "result": results
@@ -215,7 +241,7 @@ def handle_request0(request):
                                                      record)
         with open(base + '_tok.jsonl', 'a+') as fout:
             fout.write(json.dumps(annotation) + '\n')
-        return jsonify(annotation), 200
+        # return jsonify(annotation), 200
 
         message = run_split(base)
         code = 200
